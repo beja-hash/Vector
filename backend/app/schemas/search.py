@@ -31,6 +31,11 @@ class SearchBase(BaseModel):
     requested_companies_count: int = Field(default=50, ge=1, le=5000)
     data_completeness: str = "partial_allowed"
     export_format: str = "CSV"
+    data_source: str = "mock"
+    visible_browser: bool = True
+    human_mode: bool = True
+    llm_scoring_enabled: bool = True
+    llm_scoring_threshold: int | None = Field(default=None, ge=0, le=100)
 
     @model_validator(mode="after")
     def validate_ranges(self) -> "SearchBase":
@@ -38,7 +43,37 @@ class SearchBase(BaseModel):
             raise ValueError("revenue_min must be less than or equal to revenue_max")
         if self.employees_min is not None and self.employees_max is not None and self.employees_min > self.employees_max:
             raise ValueError("employees_min must be less than or equal to employees_max")
+        if self.data_source not in {"mock", "rusprofile"}:
+            raise ValueError("data_source must be mock or rusprofile")
         return self
+
+
+class RusprofileRunRequest(BaseModel):
+    active_only: bool | None = None
+    okved_code: str | None = None
+    region: str | None = None
+    revenue_min: int | None = Field(default=None, ge=0)
+    revenue_max: int | None = Field(default=None, ge=0)
+    employees_min: int | None = Field(default=None, ge=0)
+    employees_max: int | None = Field(default=None, ge=0)
+    limit: int | None = Field(default=None, ge=1, le=5000)
+    visible_browser: bool | None = None
+    human_mode: bool | None = None
+    llm_scoring_enabled: bool | None = None
+    llm_scoring_threshold: int | None = Field(default=None, ge=0, le=100)
+
+
+class RusprofileRunResponse(BaseModel):
+    search_id: str
+    status: str
+    collected: int
+    saved: int
+    duplicates: int
+    failed: int
+    scored: int = 0
+    manual_review: int = 0
+    skipped: int = 0
+    errors: list[str] = Field(default_factory=list)
 
 
 class SearchCreate(SearchBase):

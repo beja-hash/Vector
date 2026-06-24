@@ -42,6 +42,11 @@ class Search(Base):
     requested_companies_count = Column(Integer, nullable=False, default=50)
     data_completeness = Column(String(64), nullable=False, default="partial_allowed")
     export_format = Column(String(16), nullable=False, default="CSV")
+    data_source = Column(String(32), nullable=False, default="mock")
+    visible_browser = Column(Boolean, nullable=False, default=True)
+    human_mode = Column(Boolean, nullable=False, default=True)
+    llm_scoring_enabled = Column(Boolean, nullable=False, default=True)
+    llm_scoring_threshold = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
@@ -49,3 +54,4 @@ class Search(Base):
 
     project = relationship("Project", back_populates="searches")
     results = relationship("CompanyResult", back_populates="search", cascade="all, delete-orphan")
+    raw_snapshots = relationship("RawCompanySnapshot", back_populates="search", cascade="all, delete-orphan")

@@ -3,14 +3,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, projects, searches
+from app.api.routes import health, projects, searches, settings as settings_route
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.logging import configure_rusprofile_logging
 from app import models  # noqa: F401
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    configure_rusprofile_logging()
     Base.metadata.create_all(bind=engine)
     yield
 
@@ -28,3 +30,4 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api")
 app.include_router(projects.router, prefix="/api")
 app.include_router(searches.router, prefix="/api")
+app.include_router(settings_route.router, prefix="/api")

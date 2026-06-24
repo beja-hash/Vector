@@ -22,6 +22,8 @@ export function SearchSummary({ search }: SearchSummaryProps) {
     ["Выручка", `${formatNumber(search.revenue_min)} - ${formatNumber(search.revenue_max)}`],
     ["Сотрудники", `${formatNumber(search.employees_min)} - ${formatNumber(search.employees_max)}`],
     ["Компаний", formatNumber(search.requested_companies_count)],
+    ["Источник", search.data_source === "rusprofile" ? "Rusprofile" : "Mock"],
+    ["LLM scoring", search.llm_scoring_enabled ? `вкл., threshold ${valueOrDash(search.llm_scoring_threshold)}` : "выкл."],
     ["Сайт", search.website_requirement === "required" ? "нужен" : search.website_requirement === "not_required" ? "не нужен" : "не важно"],
     ["Вакансии", search.vacancies_requirement === "has_vacancies" ? "есть" : "не важно"],
   ];

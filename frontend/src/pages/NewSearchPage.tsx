@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { getProject } from "../api/projectsApi";
+import { getLlmSettings } from "../api/settingsApi";
 import { createSearch } from "../api/searchesApi";
 import { Button } from "../components/ui/Button";
 import { IcpStep } from "../components/wizard/IcpStep";
@@ -11,7 +12,7 @@ import { SignalsStep } from "../components/wizard/SignalsStep";
 import { VolumeStep } from "../components/wizard/VolumeStep";
 import { WizardProgress } from "../components/wizard/WizardProgress";
 import type { ProjectPayload } from "../types/project";
-import type { SearchPayload } from "../types/search";
+import type { LlmSettings, SearchPayload } from "../types/search";
 
 const steps = ["Проект", "ICP", "Сигналы", "Запуск"];
 
@@ -53,6 +54,11 @@ const defaultSearch: SearchPayload = {
   requested_companies_count: 50,
   data_completeness: "partial_allowed",
   export_format: "CSV",
+  data_source: "mock",
+  visible_browser: true,
+  human_mode: true,
+  llm_scoring_enabled: true,
+  llm_scoring_threshold: null,
 };
 
 export function NewSearchPage() {
@@ -60,8 +66,24 @@ export function NewSearchPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<SearchPayload>({ ...defaultSearch, project: { ...defaultProject } });
+  const [llmSettings, setLlmSettings] = useState<LlmSettings | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getLlmSettings()
+      .then((settings) => {
+        setLlmSettings(settings);
+        setForm((current) => ({
+          ...current,
+          llm_scoring_enabled: settings.polza_enabled && settings.llm_scoring_enabled,
+          llm_scoring_threshold: current.llm_scoring_threshold ?? settings.threshold,
+        }));
+      })
+      .catch(() => {
+        setLlmSettings(null);
+      });
+  }, []);
 
   useEffect(() => {
     const projectId = searchParams.get("projectId");
@@ -123,7 +145,7 @@ export function NewSearchPage() {
     <div className="space-y-6">
       <section>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Создание поиска</h1>
-        <p className="mt-1 text-sm text-slate-500">Заполните параметры ICP, Vector сохранит поиск и сгенерирует mock-результаты.</p>
+        <p className="mt-1 text-sm text-slate-500">Заполните параметры ICP, Vector сохранит поиск и запустит выбранный источник.</p>
       </section>
 
       <WizardProgress currentStep={step} steps={steps} />
@@ -141,7 +163,7 @@ export function NewSearchPage() {
           {step === 0 ? <ProjectStep project={project} onChange={updateProject} /> : null}
           {step === 1 ? <IcpStep search={form} onChange={updateSearch} /> : null}
           {step === 2 ? <SignalsStep search={form} onChange={updateSearch} /> : null}
-          {step === 3 ? <VolumeStep search={form} onChange={updateSearch} /> : null}
+          {step === 3 ? <VolumeStep search={form} llmSettings={llmSettings} onChange={updateSearch} /> : null}
 
           <div className="mt-5 flex items-center justify-between">
             <Button disabled={step === 0 || isSubmitting} type="button" variant="secondary" onClick={() => setStep((value) => value - 1)}>

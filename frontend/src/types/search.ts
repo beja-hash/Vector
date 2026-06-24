@@ -1,6 +1,7 @@
 import type { Project, ProjectPayload } from "./project";
 
 export type SearchStatus = "draft" | "running" | "completed" | "failed";
+export type SearchDataSource = "mock" | "rusprofile";
 
 export interface SearchPayload {
   project_id?: string | null;
@@ -30,6 +31,11 @@ export interface SearchPayload {
   requested_companies_count: number;
   data_completeness: string;
   export_format: string;
+  data_source: SearchDataSource;
+  visible_browser: boolean;
+  human_mode: boolean;
+  llm_scoring_enabled: boolean;
+  llm_scoring_threshold: number | null;
 }
 
 export interface Search extends Omit<SearchPayload, "project"> {
@@ -42,4 +48,25 @@ export interface Search extends Omit<SearchPayload, "project"> {
   error_message: string | null;
   found_companies_count: number;
   project: Project | null;
+}
+
+export interface RusprofileRunResponse {
+  search_id: string;
+  status: SearchStatus;
+  collected: number;
+  saved: number;
+  duplicates: number;
+  failed: number;
+  scored: number;
+  manual_review: number;
+  skipped: number;
+  errors: string[];
+}
+
+export interface LlmSettings {
+  polza_enabled: boolean;
+  llm_scoring_enabled: boolean;
+  model: string;
+  threshold: number;
+  review_min_score: number;
 }
